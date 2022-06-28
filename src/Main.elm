@@ -18,7 +18,7 @@ type Operator
 
 
 type alias Model =
-    { total : Float, operator : Maybe Operator, entry : Maybe Float }
+    { total : Float, operator : Maybe Operator, entry : String, floating : Bool }
 
 
 main =
@@ -32,6 +32,7 @@ main =
 type Msg
     = EnterDigit Int
     | EnterOperator Operator
+    | EnterFloating
     | Clear
 
 
@@ -39,7 +40,8 @@ init : Model
 init =
     { total = 0
     , operator = Nothing
-    , entry = Nothing
+    , entry = ""
+    , floating = False
     }
 
 
@@ -47,18 +49,32 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EnterDigit digit ->
-            { model | entry = Just (valueOrZero model.entry * 10 + toFloat digit) }
+            { model | entry = model.entry ++ String.fromInt digit }
 
         EnterOperator operator ->
-            { model | total = calculate model, operator = Just operator, entry = Nothing }
+            { model | total = calculate model, operator = Just operator, entry = "", floating = False }
+
+        EnterFloating ->
+            if String.contains "." model.entry then
+                model
+
+            else if model.entry == "" then
+                { model | floating = True, entry = "0." }
+
+            else
+                { model | floating = True, entry = model.entry ++ "." }
 
         Clear ->
             init
 
 
-valueOrZero : Maybe Float -> Float
-valueOrZero value =
-    case value of
+toFloatOrZero : String -> Float
+toFloatOrZero s =
+    let
+        f =
+            String.toFloat s
+    in
+    case f of
         Just x ->
             x
 
@@ -70,32 +86,31 @@ calculate : Model -> Float
 calculate model =
     case model.operator of
         Just Plus ->
-            model.total + valueOrZero model.entry
+            model.total + toFloatOrZero model.entry
 
         Just Minus ->
-            model.total - valueOrZero model.entry
+            model.total - toFloatOrZero model.entry
 
         Just Multiply ->
-            model.total * valueOrZero model.entry
+            model.total * toFloatOrZero model.entry
 
         Just Divide ->
-            model.total / valueOrZero model.entry
+            model.total / toFloatOrZero model.entry
 
         Just Equal ->
             model.total
 
         Nothing ->
-            valueOrZero model.entry
+            toFloatOrZero model.entry
 
 
 toDisplayValue : Model -> String
 toDisplayValue model =
-    case model.entry of
-        Just entry ->
-            String.fromFloat entry
+    if model.entry == "" then
+        String.fromFloat model.total
 
-        Nothing ->
-            String.fromFloat model.total
+    else
+        model.entry
 
 
 mainBg =
@@ -151,12 +166,12 @@ view model =
                 [ button "1" digitBg (EnterDigit 1)
                 , button "2" digitBg (EnterDigit 2)
                 , button "3" digitBg (EnterDigit 3)
-                , button "-" operatorBg (EnterOperator Minus)
+                , button "−" operatorBg (EnterOperator Minus)
                 ]
             , row
                 [ spacing 10 ]
                 [ button "0" digitBg (EnterDigit 0)
-                , button "." operatorBg (EnterDigit 0)
+                , button "." operatorBg EnterFloating
                 , button "=" equalBg (EnterOperator Equal)
                 , button "+" operatorBg (EnterOperator Plus)
                 ]
