@@ -18,7 +18,7 @@ type Operator
 
 
 type alias Model =
-    { total : Float, operator : Maybe Operator, entry : String, floating : Bool }
+    { total : Float, operator : Maybe Operator, entry : String }
 
 
 main =
@@ -41,7 +41,6 @@ init =
     { total = 0
     , operator = Nothing
     , entry = ""
-    , floating = False
     }
 
 
@@ -52,17 +51,17 @@ update msg model =
             { model | entry = model.entry ++ String.fromInt digit }
 
         EnterOperator operator ->
-            { model | total = calculate model, operator = Just operator, entry = "", floating = False }
+            { model | total = calculate model, operator = Just operator, entry = "" }
 
         EnterFloating ->
             if String.contains "." model.entry then
                 model
 
             else if model.entry == "" then
-                { model | floating = True, entry = "0." }
+                { model | entry = "0." }
 
             else
-                { model | floating = True, entry = model.entry ++ "." }
+                { model | entry = model.entry ++ "." }
 
         Clear ->
             init
