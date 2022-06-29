@@ -2,13 +2,12 @@ module Main exposing (Msg(..), main, toDisplayValue, update, view)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignRight, centerX, centerY, column, el, fill, height, padding, rgb255, row, spacing, text, width)
+import Element exposing (Element, alignRight, column, el, fill, height, padding, rgb255, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
-import Html.Attributes exposing (acceptCharset)
 import Json.Decode as Decode
 
 
@@ -232,7 +231,7 @@ toDisplayValue model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Browser.Events.onKeyDown keyDecoder
 
 
@@ -251,26 +250,32 @@ toKey string =
             PressedKey (Control string)
 
 
+mainBg : Element.Color
 mainBg =
     rgb255 57 55 56
 
 
+digitBg : Element.Color
 digitBg =
     rgb255 0 0 0
 
 
+equalBg : Element.Color
 equalBg =
     rgb255 250 167 80
 
 
+operatorBg : Element.Color
 operatorBg =
     rgb255 81 56 44
 
 
+displayBg : Element.Color
 displayBg =
     rgb255 207 208 201
 
 
+fontColor : Element.Color
 fontColor =
     rgb255 255 255 255
 
