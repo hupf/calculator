@@ -1,12 +1,15 @@
 module Main exposing (Msg(..), main, toDisplayValue, update, view)
 
 import Browser
+import Browser.Events
 import Element exposing (Element, alignRight, centerX, centerY, column, el, fill, height, padding, rgb255, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import Html.Attributes exposing (acceptCharset)
+import Json.Decode as Decode
 
 
 type Operator
@@ -17,54 +20,156 @@ type Operator
     | Equal
 
 
+type alias Digit =
+    Int
+
+
 type alias Model =
     { total : Float, operator : Maybe Operator, entry : String }
 
 
-main =
-    Browser.sandbox
-        { init = init
-        , update = update
-        , view = view
-        }
+type Key
+    = Character Char
+    | Control String
 
 
 type Msg
-    = EnterDigit Int
-    | EnterOperator Operator
-    | EnterFloating
+    = PressedDigit Digit
+    | PressedOperator Operator
+    | PressedFloating
+    | PressedKey Key
     | Clear
 
 
-init : Model
-init =
-    { total = 0
-    , operator = Nothing
-    , entry = ""
-    }
+main : Program () Model Msg
+main =
+    Browser.element
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }
 
 
-update : Msg -> Model -> Model
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { total = 0
+      , operator = Nothing
+      , entry = ""
+      }
+    , Cmd.none
+    )
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        EnterDigit digit ->
-            { model | entry = model.entry ++ String.fromInt digit }
+        PressedDigit digit ->
+            updateDigit digit model
 
-        EnterOperator operator ->
-            { model | total = calculate model, operator = Just operator, entry = "" }
+        PressedOperator operator ->
+            updateOperator operator model
 
-        EnterFloating ->
-            if String.contains "." model.entry then
-                model
+        PressedFloating ->
+            updateFloating model
 
-            else if model.entry == "" then
-                { model | entry = "0." }
+        PressedKey key ->
+            case key of
+                Character char ->
+                    let
+                        value =
+                            keyValueFromChar char
+                    in
+                    case value of
+                        Just (DigitKey digit) ->
+                            updateDigit digit model
 
-            else
-                { model | entry = model.entry ++ "." }
+                        Just (OperatorKey operator) ->
+                            updateOperator operator model
+
+                        Just FloatingKey ->
+                            updateFloating model
+
+                        Just ClearKey ->
+                            updateClear
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         Clear ->
-            init
+            updateClear
+
+
+updateDigit : Digit -> Model -> ( Model, Cmd Msg )
+updateDigit digit model =
+    ( { model | entry = model.entry ++ String.fromInt digit }, Cmd.none )
+
+
+updateOperator : Operator -> Model -> ( Model, Cmd Msg )
+updateOperator operator model =
+    ( { model | total = calculate model, operator = Just operator, entry = "" }, Cmd.none )
+
+
+updateFloating : Model -> ( Model, Cmd Msg )
+updateFloating model =
+    if String.contains "." model.entry then
+        ( model, Cmd.none )
+
+    else if model.entry == "" then
+        ( { model | entry = "0." }, Cmd.none )
+
+    else
+        ( { model | entry = model.entry ++ "." }, Cmd.none )
+
+
+updateClear : ( Model, Cmd Msg )
+updateClear =
+    init ()
+
+
+type KeyValue
+    = DigitKey Digit
+    | OperatorKey Operator
+    | FloatingKey
+    | ClearKey
+
+
+keyValueFromChar : Char -> Maybe KeyValue
+keyValueFromChar char =
+    case char of
+        '+' ->
+            Just (OperatorKey Plus)
+
+        '-' ->
+            Just (OperatorKey Minus)
+
+        '*' ->
+            Just (OperatorKey Multiply)
+
+        '/' ->
+            Just (OperatorKey Divide)
+
+        '=' ->
+            Just (OperatorKey Equal)
+
+        '.' ->
+            Just FloatingKey
+
+        'c' ->
+            Just ClearKey
+
+        _ ->
+            if String.contains (String.fromChar char) "0123456789" then
+                Just
+                    (DigitKey
+                        (toIntOrZero (String.fromChar char))
+                    )
+
+            else
+                Nothing
 
 
 toFloatOrZero : String -> Float
@@ -74,6 +179,20 @@ toFloatOrZero s =
             String.toFloat s
     in
     case f of
+        Just x ->
+            x
+
+        Nothing ->
+            0
+
+
+toIntOrZero : String -> Int
+toIntOrZero s =
+    let
+        i =
+            String.toInt s
+    in
+    case i of
         Just x ->
             x
 
@@ -112,6 +231,26 @@ toDisplayValue model =
         model.entry
 
 
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Browser.Events.onKeyDown keyDecoder
+
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map toKey (Decode.field "key" Decode.string)
+
+
+toKey : String -> Msg
+toKey string =
+    case String.uncons string of
+        Just ( char, "" ) ->
+            PressedKey (Character char)
+
+        _ ->
+            PressedKey (Control string)
+
+
 mainBg =
     rgb255 57 55 56
 
@@ -148,31 +287,31 @@ view model =
             [ row [ width fill, padding 10, Background.color displayBg ] [ el [ alignRight ] (text (toDisplayValue model)) ]
             , row
                 [ spacing 10 ]
-                [ button "7" digitBg (EnterDigit 7)
-                , button "8" digitBg (EnterDigit 8)
-                , button "9" digitBg (EnterDigit 9)
-                , button "÷" operatorBg (EnterOperator Divide)
+                [ button "7" digitBg (PressedDigit 7)
+                , button "8" digitBg (PressedDigit 8)
+                , button "9" digitBg (PressedDigit 9)
+                , button "÷" operatorBg (PressedOperator Divide)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "4" digitBg (EnterDigit 4)
-                , button "5" digitBg (EnterDigit 5)
-                , button "6" digitBg (EnterDigit 6)
-                , button "×" operatorBg (EnterOperator Multiply)
+                [ button "4" digitBg (PressedDigit 4)
+                , button "5" digitBg (PressedDigit 5)
+                , button "6" digitBg (PressedDigit 6)
+                , button "×" operatorBg (PressedOperator Multiply)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "1" digitBg (EnterDigit 1)
-                , button "2" digitBg (EnterDigit 2)
-                , button "3" digitBg (EnterDigit 3)
-                , button "−" operatorBg (EnterOperator Minus)
+                [ button "1" digitBg (PressedDigit 1)
+                , button "2" digitBg (PressedDigit 2)
+                , button "3" digitBg (PressedDigit 3)
+                , button "−" operatorBg (PressedOperator Minus)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "0" digitBg (EnterDigit 0)
-                , button "." operatorBg EnterFloating
-                , button "=" equalBg (EnterOperator Equal)
-                , button "+" operatorBg (EnterOperator Plus)
+                [ button "0" digitBg (PressedDigit 0)
+                , button "." operatorBg PressedFloating
+                , button "=" equalBg (PressedOperator Equal)
+                , button "+" operatorBg (PressedOperator Plus)
                 ]
             , row
                 [ spacing 10 ]
