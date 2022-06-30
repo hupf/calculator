@@ -32,6 +32,13 @@ type Key
     | Control String
 
 
+type KeyValue
+    = DigitKey Digit
+    | OperatorKey Operator
+    | FloatingKey
+    | ClearKey
+
+
 type Msg
     = PressedDigit Digit
     | PressedOperator Operator
@@ -120,13 +127,6 @@ applyClear =
     init ()
 
 
-type KeyValue
-    = DigitKey Digit
-    | OperatorKey Operator
-    | FloatingKey
-    | ClearKey
-
-
 toKeyValue : Key -> Maybe KeyValue
 toKeyValue key =
     case key of
@@ -154,10 +154,14 @@ toKeyValue key =
                     Just ClearKey
 
                 _ ->
-                    if String.contains (String.fromChar char) "0123456789" then
+                    let
+                        str =
+                            String.fromChar char
+                    in
+                    if String.contains str "0123456789" then
                         Just
                             (DigitKey
-                                (String.toInt (String.fromChar char) |> Maybe.withDefault 0)
+                                (String.toInt str |> Maybe.withDefault 0)
                             )
 
                     else
@@ -204,15 +208,6 @@ calculate model =
             entryValue
 
 
-toDisplayValue : Model -> String
-toDisplayValue model =
-    if model.entry == "" then
-        String.fromFloat model.total
-
-    else
-        model.entry
-
-
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Browser.Events.onKeyDown keyDecoder
@@ -231,27 +226,6 @@ toKey string =
 
         _ ->
             PressedKey (Control string)
-
-
-theme =
-    { mainBg =
-        rgb255 57 55 56
-    , digitBg =
-        rgb255 0 0 0
-    , equalBg =
-        rgb255 250 167 80
-    , operatorBg =
-        rgb255 81 56 44
-    , displayBg =
-        rgb255 207 208 201
-    , fontColor =
-        rgb255 255 255 255
-    }
-
-
-button : String -> Element.Color -> Msg -> Element Msg
-button label bg msg =
-    Input.button [ width <| Element.px 50, height <| Element.px 50, Border.rounded 25, Background.color bg, Font.color theme.fontColor, Font.center ] { label = text label, onPress = Just msg }
 
 
 view : Model -> Html Msg
@@ -292,3 +266,33 @@ view model =
                 [ button "C" theme.operatorBg Clear ]
             ]
         )
+
+
+theme =
+    { mainBg =
+        rgb255 57 55 56
+    , digitBg =
+        rgb255 0 0 0
+    , equalBg =
+        rgb255 250 167 80
+    , operatorBg =
+        rgb255 81 56 44
+    , displayBg =
+        rgb255 207 208 201
+    , fontColor =
+        rgb255 255 255 255
+    }
+
+
+toDisplayValue : Model -> String
+toDisplayValue model =
+    if model.entry == "" then
+        String.fromFloat model.total
+
+    else
+        model.entry
+
+
+button : String -> Element.Color -> Msg -> Element Msg
+button label bg msg =
+    Input.button [ width <| Element.px 50, height <| Element.px 50, Border.rounded 25, Background.color bg, Font.color theme.fontColor, Font.center ] { label = text label, onPress = Just msg }
