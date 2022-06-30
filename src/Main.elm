@@ -233,76 +233,62 @@ toKey string =
             PressedKey (Control string)
 
 
-mainBg : Element.Color
-mainBg =
-    rgb255 57 55 56
-
-
-digitBg : Element.Color
-digitBg =
-    rgb255 0 0 0
-
-
-equalBg : Element.Color
-equalBg =
-    rgb255 250 167 80
-
-
-operatorBg : Element.Color
-operatorBg =
-    rgb255 81 56 44
-
-
-displayBg : Element.Color
-displayBg =
-    rgb255 207 208 201
-
-
-fontColor : Element.Color
-fontColor =
-    rgb255 255 255 255
+theme =
+    { mainBg =
+        rgb255 57 55 56
+    , digitBg =
+        rgb255 0 0 0
+    , equalBg =
+        rgb255 250 167 80
+    , operatorBg =
+        rgb255 81 56 44
+    , displayBg =
+        rgb255 207 208 201
+    , fontColor =
+        rgb255 255 255 255
+    }
 
 
 button : String -> Element.Color -> Msg -> Element Msg
 button label bg msg =
-    Input.button [ width <| Element.px 50, height <| Element.px 50, Border.rounded 25, Background.color bg, Font.color fontColor, Font.center ] { label = text label, onPress = Just msg }
+    Input.button [ width <| Element.px 50, height <| Element.px 50, Border.rounded 25, Background.color bg, Font.color theme.fontColor, Font.center ] { label = text label, onPress = Just msg }
 
 
 view : Model -> Html Msg
 view model =
-    Element.layout [ padding 10, Background.color mainBg ]
+    Element.layout [ padding 10, Background.color theme.mainBg ]
         (column [ spacing 10 ]
-            [ row [ width fill, padding 10, Background.color displayBg ] [ el [ alignRight ] (text (toDisplayValue model)) ]
+            [ row [ width fill, padding 10, Background.color theme.displayBg ] [ el [ alignRight ] (text (toDisplayValue model)) ]
             , row
                 [ spacing 10 ]
-                [ button "7" digitBg (PressedDigit 7)
-                , button "8" digitBg (PressedDigit 8)
-                , button "9" digitBg (PressedDigit 9)
-                , button "÷" operatorBg (PressedOperator Divide)
+                [ button "7" theme.digitBg (PressedDigit 7)
+                , button "8" theme.digitBg (PressedDigit 8)
+                , button "9" theme.digitBg (PressedDigit 9)
+                , button "÷" theme.operatorBg (PressedOperator Divide)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "4" digitBg (PressedDigit 4)
-                , button "5" digitBg (PressedDigit 5)
-                , button "6" digitBg (PressedDigit 6)
-                , button "×" operatorBg (PressedOperator Multiply)
+                [ button "4" theme.digitBg (PressedDigit 4)
+                , button "5" theme.digitBg (PressedDigit 5)
+                , button "6" theme.digitBg (PressedDigit 6)
+                , button "×" theme.operatorBg (PressedOperator Multiply)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "1" digitBg (PressedDigit 1)
-                , button "2" digitBg (PressedDigit 2)
-                , button "3" digitBg (PressedDigit 3)
-                , button "−" operatorBg (PressedOperator Minus)
+                [ button "1" theme.digitBg (PressedDigit 1)
+                , button "2" theme.digitBg (PressedDigit 2)
+                , button "3" theme.digitBg (PressedDigit 3)
+                , button "−" theme.operatorBg (PressedOperator Minus)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "0" digitBg (PressedDigit 0)
-                , button "." operatorBg PressedFloating
-                , button "=" equalBg (PressedOperator Equal)
-                , button "+" operatorBg (PressedOperator Plus)
+                [ button "0" theme.digitBg (PressedDigit 0)
+                , button "." theme.operatorBg PressedFloating
+                , button "=" theme.equalBg (PressedOperator Equal)
+                , button "+" theme.operatorBg (PressedOperator Plus)
                 ]
             , row
                 [ spacing 10 ]
-                [ button "C" operatorBg Clear ]
+                [ button "C" theme.operatorBg Clear ]
             ]
         )
