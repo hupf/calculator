@@ -234,7 +234,7 @@ toKey string =
 view : Model -> Html Msg
 view model =
     div [ class "calculator" ]
-        [ div [ class "display" ] [ text (toDisplayValue model) ]
+        [ div [ class "display" ] [ div [] [ text (toDisplayValue model) ] ]
         , btn "7" BtnDigit (PressedDigit 7)
         , btn "8" BtnDigit (PressedDigit 8)
         , btn "9" BtnDigit (PressedDigit 9)
