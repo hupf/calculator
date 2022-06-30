@@ -37,7 +37,7 @@ jobs:
         run: npm test
 
       - name: Build
-        run: npm run build -- --base=/calculator
+        run: npm run build -- --base=/calculator/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
