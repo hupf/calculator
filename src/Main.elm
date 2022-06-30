@@ -1,4 +1,4 @@
-module Main exposing (Msg(..), main, toDisplayValue, update, view)
+module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Browser.Events
@@ -64,56 +64,47 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PressedDigit digit ->
-            updateDigit digit model
+            applyDigit digit model
 
         PressedOperator operator ->
-            updateOperator operator model
+            applyOperator operator model
 
         PressedFloating ->
-            updateFloating model
+            applyFloating model
 
         PressedKey key ->
-            case key of
-                Character char ->
-                    let
-                        value =
-                            keyValueFromChar char
-                    in
-                    case value of
-                        Just (DigitKey digit) ->
-                            updateDigit digit model
+            case toKeyValue key of
+                Just (DigitKey digit) ->
+                    applyDigit digit model
 
-                        Just (OperatorKey operator) ->
-                            updateOperator operator model
+                Just (OperatorKey operator) ->
+                    applyOperator operator model
 
-                        Just FloatingKey ->
-                            updateFloating model
+                Just FloatingKey ->
+                    applyFloating model
 
-                        Just ClearKey ->
-                            updateClear
+                Just ClearKey ->
+                    applyClear
 
-                        Nothing ->
-                            ( model, Cmd.none )
-
-                _ ->
+                Nothing ->
                     ( model, Cmd.none )
 
         Clear ->
-            updateClear
+            applyClear
 
 
-updateDigit : Digit -> Model -> ( Model, Cmd Msg )
-updateDigit digit model =
+applyDigit : Digit -> Model -> ( Model, Cmd Msg )
+applyDigit digit model =
     ( { model | entry = model.entry ++ String.fromInt digit }, Cmd.none )
 
 
-updateOperator : Operator -> Model -> ( Model, Cmd Msg )
-updateOperator operator model =
+applyOperator : Operator -> Model -> ( Model, Cmd Msg )
+applyOperator operator model =
     ( { model | total = calculate model, operator = Just operator, entry = "" }, Cmd.none )
 
 
-updateFloating : Model -> ( Model, Cmd Msg )
-updateFloating model =
+applyFloating : Model -> ( Model, Cmd Msg )
+applyFloating model =
     if String.contains "." model.entry then
         ( model, Cmd.none )
 
@@ -124,8 +115,8 @@ updateFloating model =
         ( { model | entry = model.entry ++ "." }, Cmd.none )
 
 
-updateClear : ( Model, Cmd Msg )
-updateClear =
+applyClear : ( Model, Cmd Msg )
+applyClear =
     init ()
 
 
@@ -136,89 +127,81 @@ type KeyValue
     | ClearKey
 
 
-keyValueFromChar : Char -> Maybe KeyValue
-keyValueFromChar char =
-    case char of
-        '+' ->
-            Just (OperatorKey Plus)
+toKeyValue : Key -> Maybe KeyValue
+toKeyValue key =
+    case key of
+        Character char ->
+            case char of
+                '+' ->
+                    Just (OperatorKey Plus)
 
-        '-' ->
-            Just (OperatorKey Minus)
+                '-' ->
+                    Just (OperatorKey Minus)
 
-        '*' ->
-            Just (OperatorKey Multiply)
+                '*' ->
+                    Just (OperatorKey Multiply)
 
-        '/' ->
-            Just (OperatorKey Divide)
+                '/' ->
+                    Just (OperatorKey Divide)
 
-        '=' ->
-            Just (OperatorKey Equal)
+                '=' ->
+                    Just (OperatorKey Equal)
 
-        '.' ->
-            Just FloatingKey
+                '.' ->
+                    Just FloatingKey
 
-        'c' ->
-            Just ClearKey
+                'c' ->
+                    Just ClearKey
 
-        _ ->
-            if String.contains (String.fromChar char) "0123456789" then
-                Just
-                    (DigitKey
-                        (toIntOrZero (String.fromChar char))
-                    )
+                _ ->
+                    if String.contains (String.fromChar char) "0123456789" then
+                        Just
+                            (DigitKey
+                                (String.toInt (String.fromChar char) |> Maybe.withDefault 0)
+                            )
 
-            else
-                Nothing
+                    else
+                        Nothing
 
+        Control name ->
+            case name of
+                "Enter" ->
+                    Just (OperatorKey Equal)
 
-toFloatOrZero : String -> Float
-toFloatOrZero s =
-    let
-        f =
-            String.toFloat s
-    in
-    case f of
-        Just x ->
-            x
+                "Backspace" ->
+                    Just ClearKey
 
-        Nothing ->
-            0
+                "Delete" ->
+                    Just ClearKey
 
-
-toIntOrZero : String -> Int
-toIntOrZero s =
-    let
-        i =
-            String.toInt s
-    in
-    case i of
-        Just x ->
-            x
-
-        Nothing ->
-            0
+                _ ->
+                    Nothing
 
 
 calculate : Model -> Float
 calculate model =
+    let
+        entryValue =
+            String.toFloat model.entry |> Maybe.withDefault 0
+    in
     case model.operator of
         Just Plus ->
-            model.total + toFloatOrZero model.entry
+            model.total + entryValue
 
         Just Minus ->
-            model.total - toFloatOrZero model.entry
+            model.total - entryValue
 
         Just Multiply ->
-            model.total * toFloatOrZero model.entry
+            model.total * entryValue
 
         Just Divide ->
-            model.total / toFloatOrZero model.entry
+            model.total / entryValue
 
         Just Equal ->
             model.total
 
         Nothing ->
-            toFloatOrZero model.entry
+            entryValue
 
 
 toDisplayValue : Model -> String
