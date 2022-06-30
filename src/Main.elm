@@ -1,8 +1,8 @@
-module Main exposing (Msg(..), main, update, view)
+module Main exposing (Digit, Key, Model, Msg(..), Operator, main)
 
 import Browser
 import Browser.Events
-import Html exposing (..)
+import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
@@ -158,6 +158,7 @@ toKeyValue key =
 
                 _ ->
                     let
+                        str : String
                         str =
                             String.fromChar char
                     in
@@ -188,6 +189,7 @@ toKeyValue key =
 calculate : Model -> Float
 calculate model =
     let
+        entryValue : Float
         entryValue =
             String.toFloat model.entry |> Maybe.withDefault 0
     in
@@ -267,6 +269,7 @@ toDisplayValue model =
 btn : String -> BtnStyle -> Msg -> Html Msg
 btn label style msg =
     let
+        bg : String
         bg =
             case style of
                 BtnDigit ->
