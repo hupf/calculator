@@ -2,13 +2,26 @@ module Main exposing (Msg(..), main, update, view)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignRight, column, el, fill, height, padding, rgb255, row, spacing, text, width)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
-import Html exposing (Html)
+import Html exposing (..)
+import Html.Attributes exposing (class)
+import Html.Events exposing (onClick)
 import Json.Decode as Decode
+
+
+type alias Model =
+    { total : Float, operator : Maybe Operator, entry : String }
+
+
+type Msg
+    = PressedDigit Digit
+    | PressedOperator Operator
+    | PressedFloating
+    | PressedKey Key
+    | Clear
+
+
+type alias Digit =
+    Int
 
 
 type Operator
@@ -17,14 +30,6 @@ type Operator
     | Multiply
     | Divide
     | Equal
-
-
-type alias Digit =
-    Int
-
-
-type alias Model =
-    { total : Float, operator : Maybe Operator, entry : String }
 
 
 type Key
@@ -39,12 +44,10 @@ type KeyValue
     | ClearKey
 
 
-type Msg
-    = PressedDigit Digit
-    | PressedOperator Operator
-    | PressedFloating
-    | PressedKey Key
-    | Clear
+type BtnStyle
+    = BtnDigit
+    | BtnEqual
+    | BtnOperator
 
 
 main : Program () Model Msg
@@ -230,58 +233,26 @@ toKey string =
 
 view : Model -> Html Msg
 view model =
-    Element.layout [ padding 10, Background.color theme.mainBg ]
-        (column [ spacing 10 ]
-            [ row [ width fill, padding 10, Background.color theme.displayBg ] [ el [ alignRight ] (text (toDisplayValue model)) ]
-            , row
-                [ spacing 10 ]
-                [ button "7" theme.digitBg (PressedDigit 7)
-                , button "8" theme.digitBg (PressedDigit 8)
-                , button "9" theme.digitBg (PressedDigit 9)
-                , button "÷" theme.operatorBg (PressedOperator Divide)
-                ]
-            , row
-                [ spacing 10 ]
-                [ button "4" theme.digitBg (PressedDigit 4)
-                , button "5" theme.digitBg (PressedDigit 5)
-                , button "6" theme.digitBg (PressedDigit 6)
-                , button "×" theme.operatorBg (PressedOperator Multiply)
-                ]
-            , row
-                [ spacing 10 ]
-                [ button "1" theme.digitBg (PressedDigit 1)
-                , button "2" theme.digitBg (PressedDigit 2)
-                , button "3" theme.digitBg (PressedDigit 3)
-                , button "−" theme.operatorBg (PressedOperator Minus)
-                ]
-            , row
-                [ spacing 10 ]
-                [ button "0" theme.digitBg (PressedDigit 0)
-                , button "." theme.operatorBg PressedFloating
-                , button "=" theme.equalBg (PressedOperator Equal)
-                , button "+" theme.operatorBg (PressedOperator Plus)
-                ]
-            , row
-                [ spacing 10 ]
-                [ button "C" theme.operatorBg Clear ]
-            ]
-        )
-
-
-theme =
-    { mainBg =
-        rgb255 57 55 56
-    , digitBg =
-        rgb255 0 0 0
-    , equalBg =
-        rgb255 250 167 80
-    , operatorBg =
-        rgb255 81 56 44
-    , displayBg =
-        rgb255 207 208 201
-    , fontColor =
-        rgb255 255 255 255
-    }
+    div [ class "calculator" ]
+        [ div [ class "display" ] [ text (toDisplayValue model) ]
+        , btn "7" BtnDigit (PressedDigit 7)
+        , btn "8" BtnDigit (PressedDigit 8)
+        , btn "9" BtnDigit (PressedDigit 9)
+        , btn "÷" BtnOperator (PressedOperator Divide)
+        , btn "4" BtnDigit (PressedDigit 4)
+        , btn "5" BtnDigit (PressedDigit 5)
+        , btn "6" BtnDigit (PressedDigit 6)
+        , btn "×" BtnOperator (PressedOperator Multiply)
+        , btn "1" BtnDigit (PressedDigit 1)
+        , btn "2" BtnDigit (PressedDigit 2)
+        , btn "3" BtnDigit (PressedDigit 3)
+        , btn "−" BtnOperator (PressedOperator Minus)
+        , btn "0" BtnDigit (PressedDigit 0)
+        , btn "." BtnOperator PressedFloating
+        , btn "=" BtnEqual (PressedOperator Equal)
+        , btn "+" BtnOperator (PressedOperator Plus)
+        , btn "C" BtnOperator Clear
+        ]
 
 
 toDisplayValue : Model -> String
@@ -293,6 +264,18 @@ toDisplayValue model =
         model.entry
 
 
-button : String -> Element.Color -> Msg -> Element Msg
-button label bg msg =
-    Input.button [ width <| Element.px 50, height <| Element.px 50, Border.rounded 25, Background.color bg, Font.color theme.fontColor, Font.center ] { label = text label, onPress = Just msg }
+btn : String -> BtnStyle -> Msg -> Html Msg
+btn label style msg =
+    let
+        bg =
+            case style of
+                BtnDigit ->
+                    "digit"
+
+                BtnEqual ->
+                    "equal"
+
+                BtnOperator ->
+                    "operator"
+    in
+    button [ class "btn", class ("btn-" ++ bg), onClick msg ] [ text label ]
