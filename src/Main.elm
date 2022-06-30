@@ -268,17 +268,17 @@ toDisplayValue model =
 
 btn : String -> BtnStyle -> Msg -> Html Msg
 btn label style msg =
-    let
-        bg : String
-        bg =
-            case style of
-                BtnDigit ->
-                    "digit"
+    button [ class "btn", class (classForBtnStyle style), onClick msg ] [ text label ]
 
-                BtnEqual ->
-                    "equal"
 
-                BtnOperator ->
-                    "operator"
-    in
-    button [ class "btn", class ("btn-" ++ bg), onClick msg ] [ text label ]
+classForBtnStyle : BtnStyle -> String
+classForBtnStyle style =
+    case style of
+        BtnDigit ->
+            "btn-digit"
+
+        BtnEqual ->
+            "btn-equal"
+
+        BtnOperator ->
+            "btn-operator"
