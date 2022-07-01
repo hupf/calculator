@@ -2,8 +2,8 @@ module Main exposing (Digit, Key, Model, Msg(..), Operator, main)
 
 import Browser
 import Browser.Events
-import Html exposing (Html, button, div, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, button, div, h1, text)
+import Html.Attributes exposing (attribute, class)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
 
@@ -235,25 +235,27 @@ toKey string =
 
 view : Model -> Html Msg
 view model =
-    div [ class "calculator" ]
-        [ div [ class "display" ] [ div [] [ text (toDisplayValue model) ] ]
-        , btn "7" BtnDigit (PressedDigit 7)
-        , btn "8" BtnDigit (PressedDigit 8)
-        , btn "9" BtnDigit (PressedDigit 9)
-        , btn "÷" BtnOperator (PressedOperator Divide)
-        , btn "4" BtnDigit (PressedDigit 4)
-        , btn "5" BtnDigit (PressedDigit 5)
-        , btn "6" BtnDigit (PressedDigit 6)
-        , btn "×" BtnOperator (PressedOperator Multiply)
-        , btn "1" BtnDigit (PressedDigit 1)
-        , btn "2" BtnDigit (PressedDigit 2)
-        , btn "3" BtnDigit (PressedDigit 3)
-        , btn "−" BtnOperator (PressedOperator Minus)
-        , btn "0" BtnDigit (PressedDigit 0)
-        , btn "." BtnOperator PressedFloating
-        , btn "=" BtnEqual (PressedOperator Equal)
-        , btn "+" BtnOperator (PressedOperator Plus)
-        , btn "C" BtnOperator Clear
+    div
+        [ class "calculator" ]
+        [ h1 [ class "screenreader" ] [ text "Calculator" ]
+        , div [ class "display" ] [ div [] [ text (toDisplayValue model) ] ]
+        , btn "7" "7" BtnDigit (PressedDigit 7)
+        , btn "8" "8" BtnDigit (PressedDigit 8)
+        , btn "9" "9" BtnDigit (PressedDigit 9)
+        , btn "÷" "Divide" BtnOperator (PressedOperator Divide)
+        , btn "4" "4" BtnDigit (PressedDigit 4)
+        , btn "5" "5" BtnDigit (PressedDigit 5)
+        , btn "6" "6" BtnDigit (PressedDigit 6)
+        , btn "×" "Multiply" BtnOperator (PressedOperator Multiply)
+        , btn "1" "1" BtnDigit (PressedDigit 1)
+        , btn "2" "2" BtnDigit (PressedDigit 2)
+        , btn "3" "3" BtnDigit (PressedDigit 3)
+        , btn "−" "Minus" BtnOperator (PressedOperator Minus)
+        , btn "0" "0" BtnDigit (PressedDigit 0)
+        , btn "·" "Floating point" BtnOperator PressedFloating
+        , btn "=" "Equal" BtnEqual (PressedOperator Equal)
+        , btn "+" "Plus" BtnOperator (PressedOperator Plus)
+        , btn "C" "Clear" BtnOperator Clear
         ]
 
 
@@ -266,19 +268,19 @@ toDisplayValue model =
         model.entry
 
 
-btn : String -> BtnStyle -> Msg -> Html Msg
-btn label style msg =
-    button [ class "btn", class (classForBtnStyle style), onClick msg ] [ text label ]
+btn : String -> String -> BtnStyle -> Msg -> Html Msg
+btn label ariaLabel style msg =
+    button [ attribute "arial-label" ariaLabel, class "btn", btnStyleClass style, onClick msg ] [ text label ]
 
 
-classForBtnStyle : BtnStyle -> String
-classForBtnStyle style =
+btnStyleClass : BtnStyle -> Html.Attribute Msg
+btnStyleClass style =
     case style of
         BtnDigit ->
-            "btn-digit"
+            class "btn-digit"
 
         BtnEqual ->
-            "btn-equal"
+            class "btn-equal"
 
         BtnOperator ->
-            "btn-operator"
+            class "btn-operator"
